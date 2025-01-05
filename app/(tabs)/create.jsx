@@ -1,14 +1,14 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, StyleSheet } from 'react-native'
 import React, { useState } from 'react'
-import "../../global.css"
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { CustomButton, FormField } from '../../components'
-import { Video, ResizeMode } from 'expo-av'
+import { useVideoPlayer, VideoView } from 'expo-video'
 import { icons } from '../../constants'
-import * as DocumentPicker from 'expo-document-picker' 
 import { router } from 'expo-router'
 import { createVideo } from '../../lib/appwrite'
-import { useGlobalContext } from "../../context/GlobalProvider";
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useGlobalContext } from '../../context/GlobalProvider'
+import * as DocumentPicker from 'expo-document-picker' 
+import "../../global.css"
 
 const Create = () => {
   const { user } = useGlobalContext();
@@ -23,7 +23,7 @@ const Create = () => {
   const openPicker = async (selectType) => {
     const result = await DocumentPicker.getDocumentAsync({
       type: selectType === 'image'
-        ? ['image/png', 'image/jpg']
+        ? ['image/png', 'image/jpg', 'image/jpeg']
         : ['video/mp4', 'video/gif']
     })
 
@@ -34,10 +34,6 @@ const Create = () => {
       if(selectType === 'video') {
         setForm({...form, video: result.assets[0]})
       }
-    } else {
-      setTimeout(() => {
-        Alert.alert('Document picked', JSON.stringify(result, null, 2))
-      }, 100)
     }
   }
 
@@ -47,7 +43,6 @@ const Create = () => {
     }
 
     setUploading(true)
-
     try {
       await createVideo({
         ...form, userId: user.$id
@@ -68,6 +63,8 @@ const Create = () => {
       setUploading(false);
     }
   }
+
+  const player = useVideoPlayer(form.video?.uri)
 
   return (
     <SafeAreaView className="bg-primary h-full">
@@ -91,13 +88,14 @@ const Create = () => {
 
           <TouchableOpacity onPress={() => openPicker ('video')}>
             {form.video ? (
-              <Video 
-                source={{ uri: form.video.uri }}
-                className="w-full h-64 rounded-2xl"
-                useNativeControls
-                resizeMode={ResizeMode.COVER}
-                isLoopingloop
-              />
+              <View className="w-full h-60 rounded-xl mt">
+                <VideoView
+                  style={styles.video}
+                  player={player}
+                  allowsFullscreen
+                  allowsPictureInPicture
+                />
+            </View>
             ) : (
               <View className="w-full h-60 px-4 bg-black-100 rounded-2xl justify-center items-center">
                 <View className="w-16 h-16 border border-dashed border-secondary-100 justify-center items-center">
@@ -158,5 +156,12 @@ const Create = () => {
     </SafeAreaView>
   )
 }
+  const styles = StyleSheet.create({
+    video: {
+      width: "100%",
+      height: "100%",
+      borderRadius: 20,
+    },
+  })
 
 export default Create

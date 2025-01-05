@@ -1,11 +1,22 @@
-import { View, Text, Image, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import "../global.css"
 import { icons } from '../constants'
-import { Video, ResizeMode } from 'expo-av'
+import { useVideoPlayer, VideoView } from 'expo-video'
 
-const VideoCard = ({ video: { title, thumbnail, video, creator: { username, avatar } } }) => {
+const VideoCard = ({ video }) => {
+    const { title, thumbnail, video: videoUrl, creator } = video;
+    const { username, avatar } = creator || {};
     const [play, setPlay] = useState(false);
+    const player = useVideoPlayer(videoUrl);
+
+    useEffect(() => {
+        if (play) {
+          player.play();
+        } else {
+          player.pause();
+        }
+      }, [play, player]);
 
     return (
         <View className="flex-col items-center px-4 mb-14">
@@ -42,32 +53,29 @@ const VideoCard = ({ video: { title, thumbnail, video, creator: { username, avat
             </View>
 
             {play ? (
-                <Video 
-                    source={{ uri: video }}
-                    className="w-full h-60 rounded-xl mt-3"
-                    resizeMode={ResizeMode.CONTAIN}
-                    useNativeControls
-                    shouldPlay
-                    onPlaybackStatusUpdate={(status) => {
-                        if(status.didJustFinish) {
-                            setPlay(false);
-                        }
-                    }}
-                />
+                <View style={styles.videoContainer}>
+                    <VideoView
+                        style={styles.video}
+                        player={player}
+                        allowsFullscreen
+                        allowsPictureInPicture
+                        onEnded={() => setPlay(false)}
+                    />
+              </View>
             ) : (
                 <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setPlay(true)}
-                    className="w-full h-60 rounded-xl mt-3 relative justify-center items-center"
+                    style={styles.thumbnailContainer}
                 >
                     <Image 
                         source={{ uri: thumbnail }}
-                        className="w-full h-full rounded-xl mt-3"
+                        style={styles.thumbnail}
                         resizeMode='cover'
                     />
                     <Image 
                         source={icons.play}
-                        className="w-12 h-12 absolute"
+                        style={styles.playIcon}
                         resizeMode='contain'
                     />
                 </TouchableOpacity>
@@ -76,4 +84,37 @@ const VideoCard = ({ video: { title, thumbnail, video, creator: { username, avat
     )
 }
 
+const styles = StyleSheet.create({
+    videoContainer: {
+      width: '100%',
+      height: 240,
+      borderRadius: 20,
+      overflow: 'hidden',
+      marginTop: 12,
+    },
+    video: {
+      width: '100%',
+      height: '100%',
+    },
+    thumbnailContainer: {
+      width: '100%',
+      height: 240,
+      borderRadius: 20,
+      marginTop: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'relative',
+    },
+    thumbnail: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 20,
+    },
+    playIcon: {
+      position: 'absolute',
+      width: 50,
+      height: 50,
+    },
+  });
+    
 export default VideoCard

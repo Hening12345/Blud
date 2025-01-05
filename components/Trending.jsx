@@ -1,16 +1,16 @@
-import { View, Text, FlatList, TouchableOpacity, Image, ImageBackground } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, FlatList, TouchableOpacity, Image, ImageBackground, StyleSheet } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import "../global.css"
 import * as Animatable from 'react-native-animatable'
 import { icons } from '../constants'
-import { Video, ResizeMode } from 'expo-av'
+import { useVideoPlayer, VideoView } from 'expo-video'
 
 const zoomIn = {
   0: {
     scale: 0.9
   },
   1: {
-    scale: 1.1,
+    scale: 1,
   }
 }
 const zoomOut = {
@@ -24,6 +24,15 @@ const zoomOut = {
 
 const TrendingItem = ({ activeItem, item }) => {
   const [play, setPlay] = useState(false)
+  const player = useVideoPlayer(item.video);
+
+  useEffect(() => {
+    if (play) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [play, player]);
 
   return (
     <Animatable.View
@@ -32,18 +41,15 @@ const TrendingItem = ({ activeItem, item }) => {
       duration={500}
     >
       {play ? (
-        <Video 
-          source={{ uri: item.video }}
-          className="w-52 h-72 rounded-[35px] mt-3 bg-white/10"
-          resizeMode={ResizeMode.CONTAIN}
-          useNativeControls
-          shouldPlay
-          onPlaybackStatusUpdate={(status) => {
-            if(status.didJustFinish) {
-              setPlay(false);
-            }
-          }}
-        />
+        <View style={{ width: "200px", height: "300px", borderRadius: 20 }}>
+          <VideoView
+            style={styles.video}
+            player={player}
+            allowsFullscreen
+            allowsPictureInPicture
+            resizeMode="contain"
+          />
+      </View>
       ) : (
         <TouchableOpacity
           className="relative justify-center items-center"
@@ -68,7 +74,7 @@ const TrendingItem = ({ activeItem, item }) => {
 }
 
 const Trending = ({posts}) => {
-  const [activeItem, setActiveItem] = useState(posts[1]);
+  const [activeItem, setActiveItem] = useState(posts[0]);
 
   const viewableItemsChanged =({ viewableItems }) => {
     if(viewableItems.length > 0) {
@@ -92,5 +98,19 @@ const Trending = ({posts}) => {
     />
   )
 }
-
+  const styles = StyleSheet.create({
+    contentContainer: {
+      flex: 1,
+      padding: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 50,
+    },
+    video: {
+      width: 200,
+      height: 300,
+      borderRadius: 20,
+    },
+  })
+  
 export default Trending

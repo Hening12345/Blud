@@ -1,5 +1,4 @@
 import { View, Text } from "react-native";
-import "../global.css"
 
 const InfoBox = ({ title, subtitle, containerStyles, titleStyles }) => {
   return (
@@ -14,4 +13,4 @@ const InfoBox = ({ title, subtitle, containerStyles, titleStyles }) => {
   );
 };
 
-export default InfoBox
+export default InfoBox;
